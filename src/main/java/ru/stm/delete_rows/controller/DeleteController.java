@@ -1,6 +1,7 @@
 package ru.stm.delete_rows.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +12,9 @@ import ru.stm.delete_rows.service.DeleteService;
 @Slf4j
 public class DeleteController {
 
+    private static final String OK = "OK";
+
+    @Autowired
     DeleteService deleteService;
 
     public DeleteController(DeleteService deleteService) {
@@ -25,16 +29,16 @@ public class DeleteController {
      */
     @PostMapping("new_table")
     @ResponseBody
-    public ResponseEntity createTable(@RequestParam String table,
-                                      @RequestParam Integer length
+    public ResponseEntity<String> createTable(@RequestParam String table,
+                                              @RequestParam Integer length
     ) {
         try {
             deleteService.createTable(table, length);
         } catch (Exception e) {
-            log.error("Error", e);
-            return new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR);
+            log.error("Error:{}", e.getMessage());
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        return new ResponseEntity<>(HttpStatus.OK);
+        return new ResponseEntity<>(OK, HttpStatus.OK);
     }
 
     /**
@@ -44,30 +48,35 @@ public class DeleteController {
      */
     @PostMapping("drop_table")
     @ResponseBody
-    public ResponseEntity dropTable(@RequestParam String table) {
+    public ResponseEntity<String> dropTable(@RequestParam String table) {
         try {
             deleteService.dropTable(table);
         } catch (Exception e) {
-            log.error("Error", e);
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            log.error("Error:{}", e.getMessage());
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        return new ResponseEntity<>(HttpStatus.OK);
+        return new ResponseEntity<>(OK, HttpStatus.OK);
     }
 
     /**
      * Удаление через delete from table where id in (select id from table where ... limit portion
      *
-     * @param deleteRequest параметры удаления
+     * @param table    имя таблицы
+     * @param fromDate удалять старее этой даты
+     * @param portion  удалять порциями по portion рядов
      */
     @PostMapping("in_select")
-    public ResponseEntity methodDeleteFromSelect(@RequestBody DeleteRequest deleteRequest) {
+    public ResponseEntity<String> methodDeleteFromSelect(@RequestParam String table,
+                                                         @RequestParam String fromDate,
+                                                         @RequestParam Integer portion
+    ) {
         try {
-            deleteService.methodDeleteFromSelect(deleteRequest);
+            deleteService.methodDeleteFromSelect(table, fromDate, portion);
         } catch (Exception e) {
-            log.error("Error", e);
-            return new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR);
+            log.error("Error:{}", e.getMessage());
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        return new ResponseEntity<>(HttpStatus.OK);
+        return new ResponseEntity<>(OK, HttpStatus.OK);
     }
 
 }

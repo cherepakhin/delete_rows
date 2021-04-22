@@ -1,36 +1,58 @@
 package ru.stm.delete_rows.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import ru.stm.delete_rows.controller.DeleteRequest;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.namedparam.SqlParameterSourceUtils;
+import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
+import javax.sql.DataSource;
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static java.lang.String.format;
 
 /**
  * Сервис удаления
  */
-@Service
 @Slf4j
 public class DeleteService {
 
-    @Autowired
-    private EntityManager entityManager;
+    private final JdbcTemplate jdbcTemplate;
+    private DataSource dataSource;
+
+    public DeleteService(DataSource dataSource) {
+        this.dataSource = dataSource;
+        jdbcTemplate = new JdbcTemplate(dataSource);
+    }
 
     /**
      * Удаление через delete from table where id in (select id from table where ... limit portion
      *
-     * @param deleteRequest параметры удаления
+     * @param table    имя таблицы
+     * @param fromDate удалять старее этой даты
+     * @param portion  удалять порциями по portion рядов
      */
-    public void methodDeleteFromSelect(DeleteRequest deleteRequest) throws Exception {
-        Query quiery = entityManager
-                .createNativeQuery("select count(*) from :table where ddate < :fromDate");
-        quiery.setParameter("table", deleteRequest.getTable());
-        quiery.setParameter("fromDate", deleteRequest.getFromDate());
-
-        int count = Integer.parseInt(quiery.getSingleResult().toString());
-        log.info("Для удаления {} записей",count);
+    public void methodDeleteFromSelect(String table, String fromDate, Integer portion) {
+        Integer count = jdbcTemplate.queryForObject(
+                format("select count(*) from %s where ddate < '%s'", table, fromDate),
+                Integer.class);
+        if (count == null || count == 0) {
+            log.info("В таблице {} нечего удалять", table);
+            return;
+        }
+        int countCicle = count / portion + 1;
+        log.info("В таблице {} записей для удаления {}", table, count);
+        String sql = format(
+                "delete from %s where id in (select id from %s where ddate < '%s' limit %d)",
+                table, table, fromDate, portion);
+        for (int i = 0; i < countCicle; i++) {
+            jdbcTemplate.execute(sql);
+            log.info("Таблица: {}. Удалено {} из {} ", table, i * portion, count);
+        }
     }
 
     /**
@@ -39,15 +61,23 @@ public class DeleteService {
      * @param table  имя таблицы
      * @param length кол-во записей
      */
-    public void createTable(String table, Integer length) throws Exception {
-        Query quiery = entityManager
-                .createNativeQuery("create table :table (id bigint, ddate date )");
-        quiery.setParameter("table", table);
+    public void createTable(String table, Integer length) {
+        log.info("Создание таблицы {} c длиной {}", table, length);
+        jdbcTemplate.execute(format("create table %s (id SERIAL PRIMARY KEY, ddate timestamp )", table));
         generateRows(table, length);
     }
 
+
     private void generateRows(String table, Integer length) {
-        //TOD: generate rows
+
+        List<Map<String, LocalDateTime>> records =
+                Stream.generate(() -> Collections.singletonMap("ddate", LocalDateTime.now()))
+                        .limit(length).collect(Collectors.toList());
+        SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource)
+                .withTableName(table)
+                .usingGeneratedKeyColumns("id")
+                .usingColumns("ddate");
+        simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
     }
 
     /**
@@ -56,5 +86,8 @@ public class DeleteService {
      * @param table имя таблицы
      */
     public void dropTable(String table) {
+        log.info("Удаление таблицы {}", table);
+        jdbcTemplate.execute(format("drop table %s", table));
     }
+
 }
