@@ -6,9 +6,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import javax.sql.DataSource;
 
-import static java.lang.String.format;
 import static org.mockito.Mockito.*;
-import static ru.stm.delete_rows.constants.Queries.SELECT_COUNT_OF_RECORDS_BY_DATE;
 
 class DeleteServiceTest {
 
@@ -36,7 +34,7 @@ class DeleteServiceTest {
         String nameTable = "testtable";
         spyService.dropTable(nameTable);
         verify(jdbcTemplate, times(1))
-                .execute("drop table " + nameTable);
+                .execute("drop table testtable");
     }
 
     @Test
@@ -46,7 +44,7 @@ class DeleteServiceTest {
         String nameTable = "testtable";
         String fromDate = "fromDate";
         Integer portion = 100;
-        String sql = format(SELECT_COUNT_OF_RECORDS_BY_DATE, nameTable, fromDate);
+        String sql = "select count(*) from testtable where ddate < 'fromDate'";
         when(jdbcTemplate.queryForObject(sql, Integer.class)).thenReturn(0);
         spyService.methodDeleteFromSelect(nameTable, fromDate, portion);
         verify(jdbcTemplate, times(1)).queryForObject(sql, Integer.class);
@@ -60,7 +58,7 @@ class DeleteServiceTest {
         String nameTable = "testtable";
         String fromDate = "fromDate";
         Integer portion = 100;
-        String sql = format(SELECT_COUNT_OF_RECORDS_BY_DATE, nameTable, fromDate);
+        String sql = "select count(*) from testtable where ddate < 'fromDate'";
         when(jdbcTemplate.queryForObject(sql, Integer.class)).thenReturn(200);
         spyService.methodDeleteFromSelect(nameTable, fromDate, portion);
         verify(jdbcTemplate, times(1)).queryForObject(sql, Integer.class);
