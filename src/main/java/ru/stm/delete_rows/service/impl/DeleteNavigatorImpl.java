@@ -1,6 +1,7 @@
 package ru.stm.delete_rows.service.impl;
 
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.annotation.Transactional;
 import ru.stm.delete_rows.dto.RequestDto;
 import ru.stm.delete_rows.service.DeleteNavigator;
 import ru.stm.delete_rows.service.context.DeleteMethodContext;
@@ -45,12 +46,14 @@ public class DeleteNavigatorImpl implements DeleteNavigator {
         return new PartitionRemoveStrategy(jdbcTemplate);
     }
 
+    @Transactional
     private Integer getCountOfRecords(String table) {
         return jdbcTemplate.queryForObject(
                 format(SELECT_COUNT_OF_RECORD_BY_TABLE_NAME, table),
                 Integer.class);
     }
 
+    @Transactional
     private Integer getCountOfRecordsToRemove(String table, String date) {
         return jdbcTemplate.queryForObject(
                 format(SELECT_COUNT_OF_RECORDS_BY_DATE, table, date),

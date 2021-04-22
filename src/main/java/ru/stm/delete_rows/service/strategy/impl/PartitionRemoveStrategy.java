@@ -2,6 +2,7 @@ package ru.stm.delete_rows.service.strategy.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.annotation.Transactional;
 import ru.stm.delete_rows.service.strategy.RemoveStrategy;
 
 import static java.lang.String.format;
@@ -23,6 +24,7 @@ public class PartitionRemoveStrategy extends ARemoveStrategy implements RemoveSt
     }
 
     @Override
+    @Transactional
     public void remove(String table, String date, int portion) {
         Integer count = jdbcTemplate.queryForObject(
                 format(SELECT_COUNT_OF_RECORDS_BY_DATE, table, date),

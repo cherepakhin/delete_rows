@@ -1,6 +1,7 @@
 package ru.stm.delete_rows.service.strategy.impl;
 
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.annotation.Transactional;
 import ru.stm.delete_rows.service.strategy.RemoveStrategy;
 
 import static java.lang.String.format;
@@ -16,6 +17,7 @@ public class TruncateRemoveStrategy extends ARemoveStrategy implements RemoveStr
     }
 
     @Override
+    @Transactional
     public void remove(String table, String date, int portion) {
         jdbcTemplate.execute(format(TRUNCATE_TABLE_BY_NAME,table));
     }

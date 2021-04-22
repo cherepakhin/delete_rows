@@ -1,6 +1,7 @@
 package ru.stm.delete_rows.service.strategy.impl;
 
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.annotation.Transactional;
 import ru.stm.delete_rows.service.strategy.RemoveStrategy;
 
 import static java.lang.String.format;
@@ -19,6 +20,7 @@ public class InsertRemoveStrategy extends ARemoveStrategy implements RemoveStrat
     }
 
     @Override
+    @Transactional
     public void remove(String table, String date, int portion) {
         jdbcTemplate.execute(format(CREATE_TEMP_TABLE_BY_SELECT, table, date));
         jdbcTemplate.execute(format(DROP_TABLE_BY_NAME, table));
