@@ -8,12 +8,18 @@ import static java.lang.String.format;
 import static ru.stm.delete_rows.constants.Queries.DELETE_DATA_BY_SELECT;
 import static ru.stm.delete_rows.constants.Queries.SELECT_COUNT_OF_RECORDS_BY_DATE;
 
+/**
+ * Удаление порциями через
+ * <pre>
+ *  delete from table where id in
+ *      (select id from table where ddate<:fromDate limit :portion)
+ * </pre>
+ */
 @Slf4j
-public class PartitionRemoveStrategy implements RemoveStrategy {
-    private final JdbcTemplate jdbcTemplate;
+public class PartitionRemoveStrategy extends ARemoveStrategy implements RemoveStrategy {
 
     public PartitionRemoveStrategy(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
+        super(jdbcTemplate);
     }
 
     @Override
@@ -34,5 +40,6 @@ public class PartitionRemoveStrategy implements RemoveStrategy {
             jdbcTemplate.execute(sql);
             log.info("Таблица: {}. Удалено {} из {} ", table, i * portion, count);
         }
+        log.info("Закончили упражнение.");
     }
 }
