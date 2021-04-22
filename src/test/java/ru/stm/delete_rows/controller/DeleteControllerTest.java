@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
+import ru.stm.delete_rows.service.DeleteNavigator;
 import ru.stm.delete_rows.service.DeleteService;
 
 import static org.hamcrest.Matchers.containsString;
@@ -23,11 +24,14 @@ class DeleteControllerTest {
     @MockBean
     private DeleteService service;
 
+    @MockBean
+    private DeleteNavigator deleteNavigator;
+
     @Test
     void createTable() throws Exception {
         String nameTable = "table";
         Integer length = 100;
-        this.mockMvc.perform(post("/new_table")
+        this.mockMvc.perform(post("/create_table")
                 .param("table", nameTable)
                 .param("length", length.toString())
         ).andDo(print()).andExpect(status().isOk())
@@ -40,7 +44,7 @@ class DeleteControllerTest {
         String nameTable = "table";
         Integer length = 100;
         doThrow(IllegalArgumentException.class).when(service).createTable(nameTable, length);
-        this.mockMvc.perform(post("/new_table")
+        this.mockMvc.perform(post("/create_table")
                 .param("table", nameTable)
                 .param("length", length.toString())
         ).andDo(print()).andExpect(status().isInternalServerError());

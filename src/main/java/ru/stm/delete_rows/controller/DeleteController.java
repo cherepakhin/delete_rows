@@ -1,8 +1,6 @@
 package ru.stm.delete_rows.controller;
 
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,13 +15,12 @@ public class DeleteController {
 
     private static final String OK = "OK";
 
-    @Autowired
     DeleteService deleteService;
-    @Autowired
-    public DeleteNavigator deleteNavigator;
+    DeleteNavigator deleteNavigator;
 
-    public DeleteController(DeleteService deleteService) {
+    public DeleteController(DeleteService deleteService, DeleteNavigator deleteNavigator) {
         this.deleteService = deleteService;
+        this.deleteNavigator = deleteNavigator;
     }
 
     /**
@@ -86,8 +83,8 @@ public class DeleteController {
 
     /**
      * Удаление через стратегию выбора метода
-     * @param requestDto
-     * @return
+     *
+     * @param requestDto параметры запроса(таблица)
      */
     @PostMapping("delete")
     public ResponseEntity<String> methodDeleteFromSelect(@RequestBody RequestDto requestDto) {
