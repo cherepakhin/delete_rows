@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSourceUtils;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
+import ru.stm.delete_rows.aspect.annotation.LogExecutionTime;
 
 import javax.sql.DataSource;
 import java.time.LocalDateTime;
@@ -14,6 +15,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
+import static ru.stm.delete_rows.constants.Queries.*;
 
 /**
  * Сервис удаления
@@ -22,7 +24,7 @@ import static java.lang.String.format;
 public class DeleteService {
 
     private final JdbcTemplate jdbcTemplate;
-    private DataSource dataSource;
+    private final DataSource dataSource;
 
     public DeleteService(DataSource dataSource) {
         this.dataSource = dataSource;
@@ -36,9 +38,10 @@ public class DeleteService {
      * @param fromDate удалять старее этой даты
      * @param portion  удалять порциями по portion рядов
      */
+    @LogExecutionTime
     public void methodDeleteFromSelect(String table, String fromDate, Integer portion) {
         Integer count = jdbcTemplate.queryForObject(
-                format("select count(*) from %s where ddate < '%s'", table, fromDate),
+                format(SELECT_COUNT_OF_RECORDS_BY_DATE, table, fromDate),
                 Integer.class);
         if (count == null || count == 0) {
             log.info("В таблице {} нечего удалять", table);
@@ -47,7 +50,7 @@ public class DeleteService {
         int countCicle = count / portion + 1;
         log.info("В таблице {} записей для удаления {}", table, count);
         String sql = format(
-                "delete from %s where id in (select id from %s where ddate < '%s' limit %d)",
+                DELETE_DATA_BY_SELECT,
                 table, table, fromDate, portion);
         for (int i = 0; i < countCicle; i++) {
             jdbcTemplate.execute(sql);
@@ -61,15 +64,15 @@ public class DeleteService {
      * @param table  имя таблицы
      * @param length кол-во записей
      */
+    @LogExecutionTime
     public void createTable(String table, Integer length) {
         log.info("Создание таблицы {} c длиной {}", table, length);
-        jdbcTemplate.execute(format("create table %s (id SERIAL PRIMARY KEY, ddate timestamp )", table));
+        jdbcTemplate.execute(format(CREATE_TABLE_BY_NAME, table));
         generateRows(table, length);
     }
 
-
+    @LogExecutionTime
     private void generateRows(String table, Integer length) {
-
         List<Map<String, LocalDateTime>> records =
                 Stream.generate(() -> Collections.singletonMap("ddate", LocalDateTime.now()))
                         .limit(length).collect(Collectors.toList());
@@ -85,9 +88,10 @@ public class DeleteService {
      *
      * @param table имя таблицы
      */
+    @LogExecutionTime
     public void dropTable(String table) {
         log.info("Удаление таблицы {}", table);
-        jdbcTemplate.execute(format("drop table %s", table));
+        jdbcTemplate.execute(format(DROP_TABLE_BY_NAME, table));
     }
 
 }
