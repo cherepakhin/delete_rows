@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSourceUtils;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
+import org.springframework.transaction.annotation.Transactional;
 import ru.stm.delete_rows.aspect.annotation.LogExecutionTime;
 
 import javax.sql.DataSource;
@@ -39,6 +40,7 @@ public class DeleteService {
      * @param portion  удалять порциями по portion рядов
      */
     @LogExecutionTime
+    @Transactional
     public void methodDeleteFromSelect(String table, String fromDate, Integer portion) {
         Integer count = jdbcTemplate.queryForObject(
                 format(SELECT_COUNT_OF_RECORDS_BY_DATE, table, fromDate),
@@ -65,13 +67,13 @@ public class DeleteService {
      * @param length кол-во записей
      */
     @LogExecutionTime
+    @Transactional
     public void createTable(String table, Integer length) {
         log.info("Создание таблицы {} c длиной {}", table, length);
         jdbcTemplate.execute(format(CREATE_TABLE_BY_NAME, table));
         generateRows(table, length);
     }
 
-    @LogExecutionTime
     void generateRows(String table, Integer length) {
         // Генерация записей с шагом в 1 сек
         LocalDateTime now = LocalDateTime.now();
@@ -91,6 +93,7 @@ public class DeleteService {
      * @param table имя таблицы
      */
     @LogExecutionTime
+    @Transactional
     public void dropTable(String table) {
         log.info("Удаление таблицы {}", table);
         jdbcTemplate.execute(format(DROP_TABLE_BY_NAME, table));
