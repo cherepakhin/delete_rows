@@ -32,7 +32,7 @@ public class DeleteController {
      * @param table  имя таблицы
      * @param length кол-во записей
      */
-    @PostMapping("new_table")
+    @PostMapping("create_table")
     @ResponseBody
     public ResponseEntity<String> createTable(@RequestParam String table,
                                               @RequestParam Integer length
