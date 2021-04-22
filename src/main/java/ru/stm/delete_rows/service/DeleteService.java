@@ -12,7 +12,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.stream.IntStream;
 
 import static java.lang.String.format;
 import static ru.stm.delete_rows.constants.Queries.*;
@@ -23,7 +23,7 @@ import static ru.stm.delete_rows.constants.Queries.*;
 @Slf4j
 public class DeleteService {
 
-    private final JdbcTemplate jdbcTemplate;
+    JdbcTemplate jdbcTemplate;
     private final DataSource dataSource;
 
     public DeleteService(DataSource dataSource) {
@@ -72,10 +72,12 @@ public class DeleteService {
     }
 
     @LogExecutionTime
-    private void generateRows(String table, Integer length) {
-        List<Map<String, LocalDateTime>> records =
-                Stream.generate(() -> Collections.singletonMap("ddate", LocalDateTime.now()))
-                        .limit(length).collect(Collectors.toList());
+    void generateRows(String table, Integer length) {
+        // Генерация записей с шагом в 1 сек
+        LocalDateTime now = LocalDateTime.now();
+        List<Map<String, LocalDateTime>> records = IntStream.range(1, length)
+                .mapToObj(i -> Collections.singletonMap("ddate", now.plusSeconds(i)))
+                .collect(Collectors.toList());
         SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource)
                 .withTableName(table)
                 .usingGeneratedKeyColumns("id")
@@ -93,5 +95,4 @@ public class DeleteService {
         log.info("Удаление таблицы {}", table);
         jdbcTemplate.execute(format(DROP_TABLE_BY_NAME, table));
     }
-
 }
