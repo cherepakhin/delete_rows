@@ -77,7 +77,7 @@ public class DeleteService {
     void generateRows(String table, Integer length) {
         // Генерация записей с шагом в 1 сек
         LocalDateTime now = LocalDateTime.now();
-        List<Map<String, LocalDateTime>> records = IntStream.range(1, length)
+        List<Map<String, LocalDateTime>> records = IntStream.range(0, length)
                 .mapToObj(i -> Collections.singletonMap("ddate", now.plusSeconds(i)))
                 .collect(Collectors.toList());
         SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource)
