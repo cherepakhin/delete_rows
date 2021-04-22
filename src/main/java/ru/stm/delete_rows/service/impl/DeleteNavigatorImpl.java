@@ -19,11 +19,9 @@ public class DeleteNavigatorImpl implements DeleteNavigator {
     private final int PERCENT_100 = 100;
     private final int PERCENT_60 = 60;
     private final JdbcTemplate jdbcTemplate;
-    private final DataSource dataSource;
     private final DeleteMethodContext context;
 
     public DeleteNavigatorImpl(DataSource dataSource, DeleteMethodContext context) {
-        this.dataSource = dataSource;
         jdbcTemplate = new JdbcTemplate(dataSource);
         this.context = context;
     }
@@ -39,10 +37,10 @@ public class DeleteNavigatorImpl implements DeleteNavigator {
     private RemoveStrategy getStrategy(String table, String date) {
         int percent = calculatePercentage(getCountOfRecordsToRemove(table, date), getCountOfRecords(table));
         if (percent == PERCENT_100) {
-            return new TruncateRemoveStrategy();
+            return new TruncateRemoveStrategy(jdbcTemplate);
         }
         if (percent > PERCENT_60) {
-            return new InsertRemoveStrategy();
+            return new InsertRemoveStrategy(jdbcTemplate);
         }
         return new PartitionRemoveStrategy(jdbcTemplate);
     }
