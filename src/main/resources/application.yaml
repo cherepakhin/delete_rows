@@ -1,7 +1,7 @@
 spring:
   datasource:
     url: ${PG_URL:jdbc:postgresql://localhost:5432/db}
-    username: ${PG_USER:postgres}
-    password: ${PG_PASSWORD:postgres}
+    username: postgres
+    password: root
   flyway:
     enabled: false

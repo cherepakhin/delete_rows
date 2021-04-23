@@ -1,6 +1,7 @@
 package ru.stm.delete_rows.service.context.impl;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 import ru.stm.delete_rows.service.context.DeleteMethodContext;
 import ru.stm.delete_rows.service.strategy.RemoveStrategy;
 
