@@ -23,7 +23,6 @@ class DeleteControllerTest {
 
     @MockBean
     private DeleteService service;
-
     @MockBean
     private DeleteNavigator deleteNavigator;
 

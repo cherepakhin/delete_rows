@@ -1,11 +1,11 @@
 package ru.stm.delete_rows.service.strategy.impl;
 
-import org.springframework.jdbc.core.JdbcTemplate;
+import ru.stm.delete_rows.service.DatabaseService;
 
 public abstract class ARemoveStrategy {
-    protected final JdbcTemplate jdbcTemplate;
+    protected DatabaseService databaseService;
 
-    protected ARemoveStrategy(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
+    protected ARemoveStrategy(DatabaseService databaseService) {
+        this.databaseService = databaseService;
     }
 }

@@ -1,12 +1,17 @@
 package ru.stm.delete_rows.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.stm.delete_rows.dto.RequestDto;
+import ru.stm.delete_rows.dto.ResponseDto;
 import ru.stm.delete_rows.service.DeleteNavigator;
 import ru.stm.delete_rows.service.DeleteService;
+
+import javax.validation.constraints.NotNull;
+import java.util.Date;
 
 @RestController
 @RequestMapping("/")
@@ -14,9 +19,10 @@ import ru.stm.delete_rows.service.DeleteService;
 public class DeleteController {
 
     private static final String OK = "OK";
+    private static final String ERROR = "ERROR:{}";
 
-    DeleteService deleteService;
-    DeleteNavigator deleteNavigator;
+    public final DeleteService deleteService;
+    public final DeleteNavigator deleteNavigator;
 
     public DeleteController(DeleteService deleteService, DeleteNavigator deleteNavigator) {
         this.deleteService = deleteService;
@@ -37,7 +43,7 @@ public class DeleteController {
         try {
             deleteService.createTable(table, length);
         } catch (Exception e) {
-            log.error("Error:{}", e.getMessage());
+            log.error(ERROR, e.getMessage());
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
         return new ResponseEntity<>(OK, HttpStatus.OK);
@@ -54,7 +60,7 @@ public class DeleteController {
         try {
             deleteService.dropTable(table);
         } catch (Exception e) {
-            log.error("Error:{}", e.getMessage());
+            log.error(ERROR, e.getMessage());
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
         return new ResponseEntity<>(OK, HttpStatus.OK);
@@ -68,14 +74,16 @@ public class DeleteController {
      * @param portion  удалять порциями по portion рядов
      */
     @PostMapping("in_select")
-    public ResponseEntity<String> methodDeleteFromSelect(@RequestParam String table,
-                                                         @RequestParam String fromDate,
-                                                         @RequestParam Integer portion
+    public ResponseEntity<String> methodDeleteFromSelect(@RequestParam @NotNull String table,
+                                                         @DateTimeFormat(pattern = "yyyy-MM-dd")
+                                                         @NotNull
+                                                         @RequestParam Date fromDate,
+                                                         @RequestParam(defaultValue = "10000") Integer portion
     ) {
         try {
-            deleteService.methodDeleteFromSelect(table, fromDate, portion);
+            deleteService.methodDeleteFromSelect(table, String.valueOf(fromDate), portion);
         } catch (Exception e) {
-            log.error("Error:{}", e.getMessage());
+            log.error(ERROR, e.getMessage());
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
         return new ResponseEntity<>(OK, HttpStatus.OK);
@@ -87,13 +95,15 @@ public class DeleteController {
      * @param requestDto параметры запроса(таблица)
      */
     @PostMapping("delete")
-    public ResponseEntity<String> methodDeleteFromSelect(@RequestBody RequestDto requestDto) {
+    public ResponseDto methodDeleteFromSelect(@RequestBody RequestDto requestDto) {
+        ResponseDto responseDto = new ResponseDto();
         try {
-            deleteNavigator.deleteRowsByDate(requestDto);
+            responseDto = deleteNavigator.deleteRowsByDate(requestDto);
         } catch (Exception e) {
-            log.error("Error:{}", e.getMessage());
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            log.error(ERROR, e.getMessage());
+            return responseDto.setStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .setException(e.getMessage());
         }
-        return new ResponseEntity<>(OK, HttpStatus.OK);
+        return responseDto.setStatus(HttpStatus.OK);
     }
 }

@@ -2,18 +2,19 @@ package ru.stm.delete_rows.service.strategy.impl;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
+import ru.stm.delete_rows.service.DatabaseService;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class TruncateRemoveStrategyTest {
 
-    JdbcTemplate jdbcTemplate = mock(JdbcTemplate.class);
+    DatabaseService databaseService = mock(DatabaseService.class);
 
     @Test
     void remove() {
-        TruncateRemoveStrategy strategy = new TruncateRemoveStrategy(jdbcTemplate);
+        TruncateRemoveStrategy strategy = new TruncateRemoveStrategy(databaseService);
         strategy.remove("test_table", "fromDate", 0);
-        verify(jdbcTemplate, times(1)).execute("truncate test_table");
+        verify(databaseService, times(1)).execute("truncate test_table");
     }
 }

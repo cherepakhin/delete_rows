@@ -24,12 +24,10 @@ import static ru.stm.delete_rows.constants.Queries.*;
 @Slf4j
 public class DeleteService {
 
-    JdbcTemplate jdbcTemplate;
-    private final DataSource dataSource;
+   private final DatabaseService databaseService;
 
-    public DeleteService(DataSource dataSource) {
-        this.dataSource = dataSource;
-        jdbcTemplate = new JdbcTemplate(dataSource);
+    public DeleteService(DatabaseService databaseService) {
+        this.databaseService = databaseService;
     }
 
     /**
@@ -42,7 +40,7 @@ public class DeleteService {
     @LogExecutionTime
     @Transactional
     public void methodDeleteFromSelect(String table, String fromDate, Integer portion) {
-        Integer count = jdbcTemplate.queryForObject(
+        Integer count = databaseService.queryForObject(
                 format(SELECT_COUNT_OF_RECORDS_BY_DATE, table, fromDate),
                 Integer.class);
         if (count == null || count == 0) {
@@ -55,7 +53,7 @@ public class DeleteService {
                 DELETE_DATA_BY_SELECT,
                 table, table, fromDate, portion);
         for (int i = 0; i < countCicle; i++) {
-            jdbcTemplate.execute(sql);
+            databaseService.execute(sql);
             log.info("Таблица: {}. Удалено {} из {} ", table, i * portion, count);
         }
     }
@@ -70,7 +68,7 @@ public class DeleteService {
     @Transactional
     public void createTable(String table, Integer length) {
         log.info("Создание таблицы {} c длиной {}", table, length);
-        jdbcTemplate.execute(format(CREATE_TABLE_BY_NAME, table));
+        databaseService.execute(format(CREATE_TABLE_BY_NAME, table));
         generateRows(table, length);
     }
 
@@ -80,7 +78,7 @@ public class DeleteService {
         List<Map<String, LocalDateTime>> records = IntStream.range(0, length)
                 .mapToObj(i -> Collections.singletonMap("ddate", now.plusSeconds(i)))
                 .collect(Collectors.toList());
-        SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource)
+        SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(databaseService.getDataSource())
                 .withTableName(table)
                 .usingGeneratedKeyColumns("id")
                 .usingColumns("ddate");
@@ -96,6 +94,6 @@ public class DeleteService {
     @Transactional
     public void dropTable(String table) {
         log.info("Удаление таблицы {}", table);
-        jdbcTemplate.execute(format(DROP_TABLE_BY_NAME, table));
+        databaseService.execute(format(DROP_TABLE_BY_NAME, table));
     }
 }
