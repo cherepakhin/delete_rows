@@ -40,7 +40,7 @@ public class DeleteNavigatorTest {
     }
 
     @Test
-    public void deleteRowsByDateTest() throws Exception {
+    public void deleteRowsByDateTest() {
         removeStrategyList = spy(new ArrayList<>());
         removeStrategyList.add(insertRemoveStrategy);
         removeStrategyList.add(partitionRemoveStrategy);
