@@ -1,4 +1,4 @@
-package ru.stm.delete_rows.service;
+package ru.stm.delete_rows.service.utils;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -6,6 +6,7 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSourceUtils;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.transaction.annotation.Transactional;
 import ru.stm.delete_rows.aspect.annotation.LogExecutionTime;
+import ru.stm.delete_rows.service.DatabaseService;
 
 import javax.sql.DataSource;
 import java.time.LocalDateTime;
@@ -22,11 +23,11 @@ import static ru.stm.delete_rows.constants.Queries.*;
  * Сервис удаления
  */
 @Slf4j
-public class DeleteService {
+public class DeleteUtilsService {
 
    private final DatabaseService databaseService;
 
-    public DeleteService(DatabaseService databaseService) {
+    public DeleteUtilsService(DatabaseService databaseService) {
         this.databaseService = databaseService;
     }
 

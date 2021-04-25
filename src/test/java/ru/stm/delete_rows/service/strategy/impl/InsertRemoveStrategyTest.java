@@ -13,9 +13,9 @@ class InsertRemoveStrategyTest {
     @Test
     void remove() {
         InsertRemoveStrategy strategy = new InsertRemoveStrategy(databaseService);
-        strategy.remove("test_table","2000-12-31 01:02:03",0);
+        strategy.remove("test_table","2000-12-31",0);
         verify(databaseService, times(1))
-                .execute("create table temp_table as select * from test_table where ddate > '2000-12-31 01:02:03'");
+                .execute("create table if not exists temp_table as select * from test_table where ddate > '2000-12-31'");
         verify(databaseService, times(1))
                 .execute("drop table test_table");
         verify(databaseService, times(1))

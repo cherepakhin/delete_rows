@@ -1,21 +1,19 @@
 package ru.stm.delete_rows.dto;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.format.annotation.DateTimeFormat;
+import ru.stm.delete_rows.aspect.annotation.ValidDate;
 
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import java.util.Date;
 
 @Getter
 @Setter
+@EqualsAndHashCode
 public class RequestDto {
-    @NotNull(message = "Имя таблицы не задано")
     @NotBlank(message = "Имя таблицы не должно быть пустым")
     private String tableName;
-    @DateTimeFormat(pattern = "yyyy-MM-dd hh:mm:ss")
-    @NotNull(message = "Укажите дату в формате yyyy-MM-dd hh:mm:ss (ex 2021-05-12 12:00:31")
-    private Date date;
+    @ValidDate(dateFormat = "yyyy-MM-dd", message = "Формат передаваемой даты должен быть yyyy-MM-dd")
+    private String date;
     private int portion = 10000;
 }

@@ -4,13 +4,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import ru.stm.delete_rows.service.DatabaseService;
 import ru.stm.delete_rows.service.DeleteNavigator;
-import ru.stm.delete_rows.service.DeleteService;
+import ru.stm.delete_rows.service.utils.DeleteUtilsService;
 import ru.stm.delete_rows.service.context.DeleteMethodContext;
 import ru.stm.delete_rows.service.context.impl.DeleteMethodContextImpl;
 import ru.stm.delete_rows.service.impl.DeleteNavigatorImpl;
 import ru.stm.delete_rows.service.strategy.RemoveStrategy;
 
-import javax.sql.DataSource;
 import java.util.List;
 
 @Configuration
@@ -29,7 +28,7 @@ public class JdbcConfig {
     }
 
     @Bean
-    DeleteService deleteService(DatabaseService databaseService) {
-        return new DeleteService(databaseService);
+    DeleteUtilsService deleteService(DatabaseService databaseService) {
+        return new DeleteUtilsService(databaseService);
     }
 }

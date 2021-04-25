@@ -19,6 +19,7 @@ import static ru.stm.delete_rows.constants.Queries.*;
 @Slf4j
 public class InsertRemoveStrategy extends ARemoveStrategy implements RemoveStrategy {
     private static final int RECOMMENDED_PERCENT = 50;
+    private static final int MAX_PERCENT = 100;
 
     public InsertRemoveStrategy(DatabaseService databaseService) {
         super(databaseService);
@@ -35,6 +36,6 @@ public class InsertRemoveStrategy extends ARemoveStrategy implements RemoveStrat
 
     @Override
     public boolean isRecommended(long percent) {
-        return percent >= RECOMMENDED_PERCENT;
+        return percent >= RECOMMENDED_PERCENT && percent != MAX_PERCENT;
     }
 }

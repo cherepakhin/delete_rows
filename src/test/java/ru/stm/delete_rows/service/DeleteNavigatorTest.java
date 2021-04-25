@@ -3,37 +3,35 @@ package ru.stm.delete_rows.service;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.reflect.Whitebox;
+import org.mockito.Mockito;
 import ru.stm.delete_rows.dto.RequestDto;
 import ru.stm.delete_rows.service.context.DeleteMethodContext;
 import ru.stm.delete_rows.service.impl.DeleteNavigatorImpl;
 import ru.stm.delete_rows.service.strategy.RemoveStrategy;
+import ru.stm.delete_rows.service.strategy.impl.InsertRemoveStrategy;
+import ru.stm.delete_rows.service.strategy.impl.PartitionRemoveStrategy;
+import ru.stm.delete_rows.service.strategy.impl.TruncateRemoveStrategy;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
-import static org.powermock.api.support.membermodification.MemberMatcher.method;
 
 public class DeleteNavigatorTest {
-    DeleteMethodContext context = mock(DeleteMethodContext.class);
-    DatabaseService databaseService = mock(DatabaseService.class);
-    List<RemoveStrategy> removeStrategyList = new ArrayList<>();
+    DeleteMethodContext context = spy(DeleteMethodContext.class);
+    DatabaseService databaseService = spy(DatabaseService.class);
+    InsertRemoveStrategy insertRemoveStrategy = spy(new InsertRemoveStrategy(databaseService));
+    PartitionRemoveStrategy partitionRemoveStrategy= spy(new PartitionRemoveStrategy(databaseService));
+    TruncateRemoveStrategy truncateRemoveStrategy= spy(new TruncateRemoveStrategy(databaseService));
+    List<RemoveStrategy> removeStrategyList;
     RequestDto requestDto;
 
     @BeforeEach
     public void setUp() {
-        doNothing().when(context).setStrategy(any());
-        doNothing().when(context).execute(anyString(), anyString(), anyInt());
-        doNothing().when(databaseService).execute(anyString());
-        when(databaseService.queryForObject(anyString(), any())).thenReturn(null);
         requestDto = new RequestDto();
         requestDto.setTableName("testTable");
-        requestDto.setDate(new Date(System.currentTimeMillis()));
+        requestDto.setDate("2021-04-22");
     }
 
     @AfterEach
@@ -43,27 +41,20 @@ public class DeleteNavigatorTest {
 
     @Test
     public void deleteRowsByDateTest() throws Exception {
-        DeleteNavigator deleteNavigator = PowerMockito.spy(new DeleteNavigatorImpl(context, databaseService, removeStrategyList));
-        PowerMockito
-                .when(deleteNavigator, method(DeleteNavigatorImpl.class, "getCountOfRecordsToRemove",
-                        String.class,
-                        String.class))
-                .withArguments(requestDto.getTableName(), String.valueOf(requestDto.getDate())).thenReturn(100);
-        PowerMockito
-                .when(deleteNavigator, method(DeleteNavigatorImpl.class, "getCountOfRecords",
-                        String.class))
-                .withArguments(requestDto.getTableName()).thenReturn(200);
-        //todo
-       /* PowerMockito.doNothing().when(deleteNavigator, method(DeleteNavigatorImpl.class,
-                "calculatePercentage", Integer.class, Integer.class)).withArguments(anyInt(), anyInt());
-        /*PowerMockito
-                .when(deleteNavigator, method(DeleteNavigatorImpl.class, "getStrategy",
-                        String.class,
-                        Integer.class))
-                .withArguments(anyString(), anyInt()).thenReturn(null);*/
-
-       // deleteNavigator.deleteRowsByDate(requestDto);
-        //assertEquals(50, response);
-        //    verifyPrivate(spy, times(1)).invoke("anotherPrivateMethod", "xyz");
+        removeStrategyList = spy(new ArrayList<>());
+        removeStrategyList.add(insertRemoveStrategy);
+        removeStrategyList.add(partitionRemoveStrategy);
+        removeStrategyList.add(truncateRemoveStrategy);
+        DeleteNavigator deleteNavigator = Mockito.spy(new DeleteNavigatorImpl(context, databaseService, removeStrategyList));
+        doReturn(false).when(insertRemoveStrategy).isRecommended(anyInt());
+        doReturn(true).when(partitionRemoveStrategy).isRecommended(anyInt());
+        doReturn(false).when(truncateRemoveStrategy).isRecommended(anyInt());
+        when(databaseService.queryForObject("select count(*) from testTable where ddate < '2021-04-22'", Integer.class)).thenReturn(10);
+        when(databaseService.queryForObject("select count(*) from testTable", Integer.class)).thenReturn(100);
+        doNothing().when(partitionRemoveStrategy).remove(anyString(), anyString(), anyInt());
+        doAnswer(invocation -> partitionRemoveStrategy).when(context).setStrategy(any());
+        deleteNavigator.deleteRowsByDate(requestDto);
+        verify(partitionRemoveStrategy, times(1)).isRecommended(10);
+       // verify(partitionRemoveStrategy, times(1)).remove(anyString(), anyString(), anyInt());
     }
 }

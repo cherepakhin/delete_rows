@@ -40,7 +40,7 @@ public class DeleteNavigatorImpl implements DeleteNavigator {
         StopWatch watch = new StopWatch();
         watch.start();
         String tableName = requestDto.getTableName();
-        String date = String.valueOf(requestDto.getDate());
+        String date = requestDto.getDate();
         int countOfRecordsToRemove = getCountOfRecordsToRemove(tableName, date);
         context.setStrategy(getStrategy(tableName, countOfRecordsToRemove));
         context.execute(tableName, date, requestDto.getPortion());

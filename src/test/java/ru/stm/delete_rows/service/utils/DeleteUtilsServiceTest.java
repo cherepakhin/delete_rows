@@ -1,20 +1,21 @@
-package ru.stm.delete_rows.service;
+package ru.stm.delete_rows.service.utils;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
+import ru.stm.delete_rows.service.DatabaseService;
 
 import static org.mockito.Mockito.*;
 
-class DeleteServiceTest {
+class DeleteUtilsServiceTest {
 
     DatabaseService databaseService = mock(DatabaseService.class);
-    DeleteService spyService;
+    DeleteUtilsService spyService;
 
     @BeforeEach
     void setUp() {
-        spyService = spy(new DeleteService(databaseService));
+        spyService = spy(new DeleteUtilsService(databaseService));
         ReflectionTestUtils.setField(spyService, "databaseService", databaseService);
     }
 
@@ -25,7 +26,6 @@ class DeleteServiceTest {
 
     @Test
     void createTable() {
-
         String nameTable = "testtable";
         Integer length = 100;
         doNothing().when(spyService).generateRows(nameTable, length);
