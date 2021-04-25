@@ -28,3 +28,7 @@ mvnw
 mvnw.cmd
 target/
 *.iml
+**node/
+**node_modules/
+**lock.json
+./backend/src/main/resources/public/

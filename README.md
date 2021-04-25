@@ -3,10 +3,10 @@
 
 ### Запуск
 
-Используется __Java 11__  и __PostgreSQL__ сервер. Для запуска выполнить команду
+Используется __Java__, __PostgreSQL__ сервер, __Vue.js__. Для запуска выполнить команду
 
 ```sh
-mvn spring-boot:run
+mvn clean spring-boot:run
 ```
 
 ### Переменные окружения
@@ -19,20 +19,24 @@ mvn spring-boot:run
 
 ### Использование
 
-После запуска будет доступен REST сервис по адресу http://localhost:8080
+После запуска будет доступен web страница по адресу http://localhost:8080
+
+![screen](./doc/screen.png)
+
+и REST сервис по адресу http://localhost:8080/api
 
 | EndPoint | HTTP-метод | Переменные запроса | Описание |
 | --- |------- | ------ |------ |
 | /new_table |POST | table,length |Создать таблицу с именем __table__ и сгенерировать __length__ записей |
 | /drop_table |POST | table |Удалить таблицу с именем __table__ |
-| /in_select |POST | table,fromDate,portion |Удалить из таблицы с именем __table__ записи старее __fromDate__. Удалять порциями по __portion__ записей. Используется способ: *delete from table where id in (select id from table where ddate<:fromDate limit portion*)|
+| /delete |POST | table,fromDate |Удалить из таблицы с именем __table__ записи старее __fromDate__.|
 
 ### Примеры
 
 Создание таблицы t1 с 10000 записями
 
 ````shell script
-curl -X POST -F 'table=t1' -F 'length=10000' http://127.0.0.1:8080/create_table
+curl -X POST -F 'table=t1' -F 'length=10000' http://127.0.0.1:8080/api/create_table
 
 ----log----
 Создание таблицы t1 c длиной 10000
@@ -42,7 +46,7 @@ curl -X POST -F 'table=t1' -F 'length=10000' http://127.0.0.1:8080/create_table
 Удаление таблицы t1
 
 ````shell script
-curl -X POST -F 'table=t1' http://127.0.0.1:8080/drop_table
+curl -X POST -F 'table=t1' http://127.0.0.1:8080/api/drop_table
 
 ----log----
 Запуск таймера
@@ -50,21 +54,8 @@ curl -X POST -F 'table=t1' http://127.0.0.1:8080/drop_table
 Время выполнения: 20 мс
 ````
 
-Удаление из таблицы t1 записи старее 2121-01-01 01:02:03 методом delete from select
+Удаление из таблицы t1 записи старее 2121-01-01
 
 ````shell script
-curl -X POST -F 'table=t1' -F 'fromDate="2121-01-01 01:02:03"' -F 'portion=1000' http://127.0.0.1:8080/in_select
-
-----log----
-Запуск таймера
-В таблице t1 записей для удаления 10000
-Удалено 0 из 10000 
-Удалено 1000 из 10000
-.... 
-Удалено 10000 из 10000 
-Время выполнения: 76 мс
+curl -X POST -F 'table=t1' -F 'fromDate="2121-01-01"' http://127.0.0.1:8080/api/delete
 ````
-
-
-
-
