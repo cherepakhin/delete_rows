@@ -17,4 +17,9 @@ public class DeleteMethodContextImpl implements DeleteMethodContext {
     public void setStrategy(RemoveStrategy removeStrategy) {
         this.removeStrategy = removeStrategy;
     }
+
+    @Override
+    public RemoveStrategy getStrategy() {
+        return this.removeStrategy;
+    }
 }
