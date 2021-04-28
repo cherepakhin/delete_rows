@@ -3,15 +3,16 @@ package ru.stm.delete_rows.service.utils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.namedparam.SqlParameterSourceUtils;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.stm.delete_rows.aspect.annotation.LogExecutionTime;
 import ru.stm.delete_rows.service.DatabaseService;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static java.lang.String.format;
@@ -22,8 +23,9 @@ import static ru.stm.delete_rows.constants.Queries.*;
  */
 @Slf4j
 public class DeleteUtilsService {
-
-   private final DatabaseService databaseService;
+    private static final String DATE_COLUMN_NAME = "ddate";
+    private static final String ID_COLUMN_NAME = "id";
+    private final DatabaseService databaseService;
 
     public DeleteUtilsService(DatabaseService databaseService) {
         this.databaseService = databaseService;
@@ -71,17 +73,50 @@ public class DeleteUtilsService {
         generateRows(table, length);
     }
 
+    /**
+     * Добавляет N записей в указанную таблицу с шагом времени 1 сек
+     * @param table имя таблицы
+     * @param length кол-во записей
+     */
     void generateRows(String table, Integer length) {
         // Генерация записей с шагом в 1 сек
+        log.info("Начало генерации строк");
         LocalDateTime now = LocalDateTime.now();
-        List<Map<String, LocalDateTime>> records = IntStream.range(0, length)
-                .mapToObj(i -> Collections.singletonMap("ddate", now.plusSeconds(i)))
-                .collect(Collectors.toList());
-        SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(databaseService.getDataSource())
-                .withTableName(table)
-                .usingGeneratedKeyColumns("id")
-                .usingColumns("ddate");
-        simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
+        List<Map<String, LocalDateTime>> recordsBatch = new ArrayList<>();
+        IntStream.range(0, length)
+                .mapToObj(i -> Collections.singletonMap(DATE_COLUMN_NAME, now.plusSeconds(i)))
+                .forEach(item -> insertData(recordsBatch, table, item));
+        log.info("Генерация строк завершена");
+    }
+    /**
+     * Добавляет N записей в указанную таблицу с заданным временем
+     * @param table имя таблицы
+     * @param length кол-во записей
+     * @param date дата записи
+     */
+    public void insertRows(String table, Integer length, LocalDateTime date) {
+        List<Map<String, LocalDateTime>> records = new ArrayList<>();
+        IntStream.range(0, length)
+                .mapToObj(i -> Collections.singletonMap(DATE_COLUMN_NAME, date))
+                .forEach(item -> insertData(records, table, item));
+    }
+
+    /**
+     * Вставляет строки в таблицу батчами по 100 000
+     * @param records текущий батч
+     * @param table имя таблицы
+     * @param insertRow строка для записи
+     */
+    private void insertData(List<Map<String, LocalDateTime>> records, String table, Map<String, LocalDateTime> insertRow) {
+        records.add(insertRow);
+        if (records.size() > 100000) {
+            SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(databaseService.getDataSource())
+                    .withTableName(table)
+                    .usingGeneratedKeyColumns(ID_COLUMN_NAME)
+                    .usingColumns(DATE_COLUMN_NAME);
+            simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
+            records.clear();
+        }
     }
 
     /**

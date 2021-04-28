@@ -11,8 +11,6 @@ import ru.stm.delete_rows.service.DeleteNavigator;
 import ru.stm.delete_rows.service.context.DeleteMethodContext;
 import ru.stm.delete_rows.service.strategy.RemoveStrategy;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 
 import static java.lang.String.format;
@@ -42,11 +40,12 @@ public class DeleteNavigatorImpl implements DeleteNavigator {
         String tableName = requestDto.getTableName();
         String date = requestDto.getDate();
         int countOfRecordsToRemove = getCountOfRecordsToRemove(tableName, date);
+        log.info("Найдено {} записей для удаления", countOfRecordsToRemove);
         context.setStrategy(getStrategy(tableName, countOfRecordsToRemove));
         context.execute(tableName, date);
         watch.stop();
         return new ResponseDto()
-                .setTime(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date(watch.getLastTaskTimeMillis())))
+                .setTime(String.format("%s мс", watch.getLastTaskTimeMillis()))
                 .setRowsDeleted(countOfRecordsToRemove);
     }
 
@@ -57,7 +56,8 @@ public class DeleteNavigatorImpl implements DeleteNavigator {
      * @return стратегию удаления
      */
     private RemoveStrategy getStrategy(String table, Integer removeRowsCount) {
-        int percent = calculatePercentage(removeRowsCount, getCountOfRecords(table));
+        double percent = calculatePercentage(removeRowsCount, getCountOfRecords(table));
+        log.info("Процент удаляемых записей = {}", percent);
         return removeStrategyList.stream()
                 .filter(removeStrategy -> removeStrategy.isRecommended(percent))
                 .findFirst()
@@ -93,7 +93,7 @@ public class DeleteNavigatorImpl implements DeleteNavigator {
      * @param total общее число записей в таблице
      * @return
      */
-    private int calculatePercentage(Integer obtained, Integer total) {
+    private double calculatePercentage(double obtained, double total) {
         return obtained * MAX_PERCENT / total;
     }
 }

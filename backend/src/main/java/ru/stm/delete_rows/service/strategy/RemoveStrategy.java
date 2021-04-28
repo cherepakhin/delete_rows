@@ -16,5 +16,5 @@ public interface RemoveStrategy {
      * @param percent процент удаляемых записей
      * @return true при соответсвии стратегии параметрам, иначе false
      */
-    boolean isRecommended(long percent);
+    boolean isRecommended(double percent);
 }
