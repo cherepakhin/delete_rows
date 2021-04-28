@@ -7,6 +7,10 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.stm.delete_rows.service.utils.DeleteUtilsService;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 import static org.hamcrest.Matchers.containsString;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -31,7 +35,7 @@ class DeleteUtilsControllerTest {
                 .param("table", nameTable)
                 .param("length", length.toString())
         ).andDo(print()).andExpect(status().isOk())
-                .andExpect(content().string(containsString("OK")));
+                .andExpect(content().string(containsString("Операция выполнена")));
         verify(service, times(1)).createTable(nameTable, length);
     }
 
@@ -53,7 +57,7 @@ class DeleteUtilsControllerTest {
         this.mockMvc.perform(post("/api/drop_table")
                 .param("table", nameTable)
         ).andDo(print()).andExpect(status().isOk())
-                .andExpect(content().string(containsString("OK")));
+                .andExpect(content().string(containsString("Операция выполнена")));
         verify(service, times(1)).dropTable(nameTable);
     }
 
@@ -65,6 +69,37 @@ class DeleteUtilsControllerTest {
                 .param("table", nameTable)
         ).andDo(print()).andExpect(status().isInternalServerError());
         verify(service, times(1)).dropTable(nameTable);
+    }
+
+    @Test
+    void insertRow() throws Exception {
+        String nameTable = "table";
+        Integer length = 10;
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        String date = LocalDateTime.now().format(formatter);
+        LocalDateTime parsedDate = LocalDate.parse(date, formatter).atStartOfDay();
+        this.mockMvc.perform(post("/api/insert_rows")
+                .param("table", nameTable)
+                .param("date", date)
+                .param("length", String.valueOf(length))
+        ).andDo(print()).andExpect(status().isOk());
+        verify(service, times(1)).insertRows(nameTable, length, parsedDate);
+    }
+
+    @Test
+    void insertRowException() throws Exception {
+        String nameTable = "table";
+        Integer length = 10;
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        String date = LocalDateTime.now().format(formatter);
+        LocalDateTime parsedDate = LocalDate.parse(date, formatter).atStartOfDay();
+        doThrow(IllegalArgumentException.class).when(service).insertRows(nameTable, length, parsedDate);
+        this.mockMvc.perform(post("/api/insert_rows")
+                .param("table", nameTable)
+                .param("date", date)
+                .param("length", String.valueOf(length))
+        ).andDo(print()).andExpect(status().isInternalServerError());
+        verify(service, times(1)).insertRows(nameTable, length, parsedDate);
     }
 
 }
