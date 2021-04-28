@@ -53,7 +53,7 @@ public class PartitionRemoveStrategy extends ARemoveStrategy implements RemoveSt
             databaseService.execute(sql);
             log.info("Таблица: {}. Удалено {}% из {} ", table, i * STEP_PERCENT, count);
         }
-        log.info("Закончили упражнение.");
+        log.info("Удаление завершено");
     }
 
     @Override

@@ -1,14 +1,12 @@
 package ru.stm.delete_rows.service.utils;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSourceUtils;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.transaction.annotation.Transactional;
 import ru.stm.delete_rows.aspect.annotation.LogExecutionTime;
 import ru.stm.delete_rows.service.DatabaseService;
 
-import javax.sql.DataSource;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;

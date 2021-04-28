@@ -1,5 +1,8 @@
 package ru.stm.delete_rows.constants;
 
+/**
+ * Запросы к базе данных
+ */
 public class Queries {
     public static final String SELECT_COUNT_OF_RECORDS_BY_DATE = "select count(*) from %s where ddate < '%s'";
     public static final String DELETE_DATA_BY_SELECT = "delete from %s where id in (select id from %s where ddate < '%s' limit %d)";
