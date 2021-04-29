@@ -1,5 +1,6 @@
 <template>
   <div>
+    <div>Удалить записи старее:</div>
     <v-form>
       <v-row>
         <v-col
