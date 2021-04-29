@@ -14,10 +14,10 @@
           />
         </v-col>
       </v-row>
-      <create-table-form v-bind:createTableOnClick="createTable"/>
-      <drop-table-form v-bind:drop-table-on-click="dropTable"/>
-      <div>Удалить записи старее:</div>
-      <delete-rows-form v-bind:delete-rows-on-click="deleteRows"/>
+      <create-table-form v-bind:createTableOnClick="createTable" class="my-5"/>
+      <drop-table-form v-bind:drop-table-on-click="dropTable" class="my-5"/>
+      <delete-rows-form v-bind:delete-rows-on-click="deleteRows" class="my-5"/>
+      <insert-rows-from v-bind:insert-rows-on-click="insertRows" class="my-5"/>
       <v-banner class="grey lighten-3 mt-4">Результат</v-banner>
       <div class="text-center">
         <v-progress-linear
@@ -36,6 +36,7 @@ import TaskHead from "./components/TaskHead";
 import CreateTableForm from "./components/CreateTableForm";
 import DropTableForm from "./components/DropTableForm";
 import DeleteRowsForm from "./components/DeleteRowsForm";
+import InsertRowsFrom from "./components/InsertRowsForm";
 import {AXIOS} from "./util/http_commons";
 
 export default {
@@ -45,7 +46,8 @@ export default {
     TaskHead,
     CreateTableForm,
     DropTableForm,
-    DeleteRowsForm
+    DeleteRowsForm,
+    InsertRowsFrom
   },
   data: () => {
     return {
@@ -55,10 +57,10 @@ export default {
     };
   },
   methods: {
-    createTable: function (length) {
-      console.log(JSON.stringify({table: this.tableName, length: length}));
+    createTable: function (length, date) {
+      console.log(JSON.stringify({table: this.tableName, length, date}));
       this.startProgress();
-      AXIOS.post("/create_table", null, {params: {table: this.tableName, length: length}})
+      AXIOS.post("/create_table", null, {params: {table: this.tableName, length, date}})
           .then(response => {
             this.showResult(response.data);
           })
@@ -81,6 +83,16 @@ export default {
       console.log(dateTime)
       this.startProgress();
       AXIOS.post("/delete", {tableName: this.tableName, date: dateTime})
+          .then(response => {
+            this.showResult(response.data);
+          })
+          .catch(error => {
+            this.showResult(error.response.data);
+          });
+    },
+    insertRows: function (tableDto) {
+      this.startProgress();
+      AXIOS.post("/insert_rows", null, {params: {...tableDto, table: this.tableName}})
           .then(response => {
             this.showResult(response.data);
           })
