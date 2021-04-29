@@ -32,7 +32,8 @@ public class InsertRemoveStrategy extends ARemoveStrategy implements RemoveStrat
     @LogExecutionTime
     public void remove(String table, String date) {
         log.info("Удаление методом вставки");
-        databaseService.execute(format(CREATE_TEMP_TABLE_BY_SELECT, table, date));
+        databaseService.execute(format(CREATE_TEMP_TABLE, table));
+        databaseService.execute(format(INSERT_ROW_BY_SELECT, table, date));
         databaseService.execute(format(DROP_TABLE_BY_NAME, table));
         databaseService.execute(format(RENAME_TEMP_TABLE, table));
         log.info("Удаление завершено");
