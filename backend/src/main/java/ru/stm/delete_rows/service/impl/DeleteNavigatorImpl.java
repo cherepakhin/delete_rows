@@ -11,8 +11,6 @@ import ru.stm.delete_rows.service.DeleteNavigator;
 import ru.stm.delete_rows.service.context.DeleteMethodContext;
 import ru.stm.delete_rows.service.strategy.RemoveStrategy;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 
 import static java.lang.String.format;
@@ -42,35 +40,60 @@ public class DeleteNavigatorImpl implements DeleteNavigator {
         String tableName = requestDto.getTableName();
         String date = requestDto.getDate();
         int countOfRecordsToRemove = getCountOfRecordsToRemove(tableName, date);
+        log.info("Найдено {} записей для удаления", countOfRecordsToRemove);
         context.setStrategy(getStrategy(tableName, countOfRecordsToRemove));
         context.execute(tableName, date);
         watch.stop();
         return new ResponseDto()
-                .setTime(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date(watch.getLastTaskTimeMillis())))
+                .setTime(String.format("%s мс", watch.getLastTaskTimeMillis()))
                 .setRowsDeleted(countOfRecordsToRemove);
     }
 
+    /**
+     * Выбирает статегию удаления на основании вычислений процента удаляемых записей
+     * @param table имя таблицы
+     * @param removeRowsCount  исло записей для удаления
+     * @return стратегию удаления
+     */
     private RemoveStrategy getStrategy(String table, Integer removeRowsCount) {
-        int percent = calculatePercentage(removeRowsCount, getCountOfRecords(table));
+        double percent = calculatePercentage(removeRowsCount, getCountOfRecords(table));
+        log.info("Процент удаляемых записей = {}", percent);
         return removeStrategyList.stream()
                 .filter(removeStrategy -> removeStrategy.isRecommended(percent))
                 .findFirst()
                 .orElseThrow(() -> new RemoveStrategyNotFoundException("Remove strategy not found for this operation"));
     }
 
+    /**
+     * Считает общее число записей в таблице
+     * @param table имя таблицы
+     * @return общее число записей в таблице
+     */
     private Integer getCountOfRecords(String table) {
         return databaseService.queryForObject(
                 format(SELECT_COUNT_OF_RECORD_BY_TABLE_NAME, table),
                 Integer.class);
     }
 
+    /**
+     * Вычисляет кол-во записей которые должны быть удалены
+     * @param table имя таблицы
+     * @param date дата старше которой будут удалены данные
+     * @return число записей для удаления
+     */
     private Integer getCountOfRecordsToRemove(String table, String date) {
         return databaseService.queryForObject(
                 format(SELECT_COUNT_OF_RECORDS_BY_DATE, table, date),
                 Integer.class);
     }
 
-    private int calculatePercentage(Integer obtained, Integer total) {
+    /**
+     * Вычисляет количество записей которые должны быть удалены в процентном соотношении
+     * @param obtained число записей для удаления
+     * @param total общее число записей в таблице
+     * @return
+     */
+    private double calculatePercentage(double obtained, double total) {
         return obtained * MAX_PERCENT / total;
     }
 }

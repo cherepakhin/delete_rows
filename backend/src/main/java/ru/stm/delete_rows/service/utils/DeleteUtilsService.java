@@ -1,62 +1,34 @@
 package ru.stm.delete_rows.service.utils;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSourceUtils;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.transaction.annotation.Transactional;
 import ru.stm.delete_rows.aspect.annotation.LogExecutionTime;
 import ru.stm.delete_rows.service.DatabaseService;
 
-import javax.sql.DataSource;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static java.lang.String.format;
-import static ru.stm.delete_rows.constants.Queries.*;
+import static ru.stm.delete_rows.constants.Queries.CREATE_TABLE_BY_NAME;
+import static ru.stm.delete_rows.constants.Queries.DROP_TABLE_BY_NAME;
 
 /**
- * Сервис удаления
+ * Вспомогательный сервис генерации данных
  */
 @Slf4j
 public class DeleteUtilsService {
-
-   private final DatabaseService databaseService;
+    private static final String DATE_COLUMN_NAME = "ddate";
+    private static final String ID_COLUMN_NAME = "id";
+    private final DatabaseService databaseService;
 
     public DeleteUtilsService(DatabaseService databaseService) {
         this.databaseService = databaseService;
-    }
-
-    /**
-     * Удаление через delete from table where id in (select id from table where ... limit portion
-     *
-     * @param table    имя таблицы
-     * @param fromDate удалять старее этой даты
-     * @param portion  удалять порциями по portion рядов
-     */
-    @LogExecutionTime
-    @Transactional
-    public void methodDeleteFromSelect(String table, String fromDate, Integer portion) {
-        Integer count = databaseService.queryForObject(
-                format(SELECT_COUNT_OF_RECORDS_BY_DATE, table, fromDate),
-                Integer.class);
-        if (count == null || count == 0) {
-            log.info("В таблице {} нечего удалять", table);
-            return;
-        }
-        int countCicle = count / portion + 1;
-        log.info("В таблице {} записей для удаления {}", table, count);
-        String sql = format(
-                DELETE_DATA_BY_SELECT,
-                table, table, fromDate, portion);
-        for (int i = 0; i < countCicle; i++) {
-            databaseService.execute(sql);
-            log.info("Таблица: {}. Удалено {} из {} ", table, i * portion, count);
-        }
     }
 
     /**
@@ -73,16 +45,68 @@ public class DeleteUtilsService {
         generateRows(table, length);
     }
 
+    /**
+     * Добавляет N записей в указанную таблицу с шагом времени 1 сек
+     * @param table имя таблицы
+     * @param length кол-во записей
+     */
     void generateRows(String table, Integer length) {
         // Генерация записей с шагом в 1 сек
+        log.info("Начало генерации строк");
         LocalDateTime now = LocalDateTime.now();
-        List<Map<String, LocalDateTime>> records = IntStream.range(0, length)
-                .mapToObj(i -> Collections.singletonMap("ddate", now.plusSeconds(i)))
-                .collect(Collectors.toList());
+        List<Map<String, LocalDateTime>> recordsBatch = new ArrayList<>();
+        IntStream.range(0, length)
+                .mapToObj(i -> Collections.singletonMap(DATE_COLUMN_NAME, now.plusSeconds(i)))
+                .forEach(item -> insertData(recordsBatch, table, item));
+        if (!recordsBatch.isEmpty()) {
+            executeBatch(table, recordsBatch);
+        }
+        log.info("Генерация строк завершена");
+    }
+    /**
+     * Добавляет N записей в указанную таблицу с заданным временем
+     * @param table имя таблицы
+     * @param length кол-во записей
+     * @param date дата записи
+     */
+    public void insertRows(String table, Integer length, LocalDateTime date) {
+        log.info("Добавление {} строк в таблицу {} за дату {}", length, table, date);
+        List<Map<String, LocalDateTime>> records = new ArrayList<>();
+        IntStream.range(0, length)
+                .mapToObj(i -> Collections.singletonMap(DATE_COLUMN_NAME, date))
+                .iterator()
+                .forEachRemaining(item -> insertData(records, table, item));
+        if (!records.isEmpty()) {
+            executeBatch(table, records);
+        }
+        log.info("Добавлено {} строк", length);
+    }
+
+    /**
+     * Вставляет строки в таблицу батчами по 100 000
+     * @param records текущий батч
+     * @param table имя таблицы
+     * @param insertRow строка для записи
+     */
+    private void insertData(List<Map<String, LocalDateTime>> records, String table, Map<String, LocalDateTime> insertRow) {
+        if (records.size() >= 100000) {
+            executeBatch(table, records);
+            records.clear();
+        }
+        records.add(insertRow);
+    }
+
+    /**
+     * Выполняет пакетную вставку записей в указанную таблицу
+     * @param table таблица назначения
+     * @param records добавляемые записи
+     */
+    private void executeBatch(String table, List<Map<String, LocalDateTime>> records) {
+        log.info("Запись {} строк в таблицу {}", records.size(), table);
         SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(databaseService.getDataSource())
                 .withTableName(table)
-                .usingGeneratedKeyColumns("id")
-                .usingColumns("ddate");
+                .usingGeneratedKeyColumns(ID_COLUMN_NAME)
+                .usingColumns(DATE_COLUMN_NAME);
         simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
     }
 

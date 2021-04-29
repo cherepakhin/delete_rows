@@ -42,28 +42,4 @@ class DeleteUtilsServiceTest {
         verify(databaseService, times(1))
                 .execute("drop table testtable");
     }
-
-    @Test
-    void methodDeleteFromSelectForEmptyTable() {
-        String nameTable = "testtable";
-        String fromDate = "fromDate";
-        Integer portion = 100;
-        String sql = "select count(*) from testtable where ddate < 'fromDate'";
-        when(databaseService.queryForObject(sql, Integer.class)).thenReturn(0);
-        spyService.methodDeleteFromSelect(nameTable, fromDate, portion);
-        verify(databaseService, times(1)).queryForObject(sql, Integer.class);
-        verify(databaseService, times(0)).execute(anyString());
-    }
-
-    @Test
-    void methodDeleteFromSelect() {
-        String nameTable = "testtable";
-        String fromDate = "fromDate";
-        Integer portion = 100;
-        String sql = "select count(*) from testtable where ddate < 'fromDate'";
-        when(databaseService.queryForObject(sql, Integer.class)).thenReturn(200);
-        spyService.methodDeleteFromSelect(nameTable, fromDate, portion);
-        verify(databaseService, times(1)).queryForObject(sql, Integer.class);
-        verify(databaseService, times(3)).execute(anyString());
-    }
 }

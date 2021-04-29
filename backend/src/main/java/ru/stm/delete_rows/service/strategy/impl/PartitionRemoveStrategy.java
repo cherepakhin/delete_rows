@@ -3,6 +3,7 @@ package ru.stm.delete_rows.service.strategy.impl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.stm.delete_rows.aspect.annotation.LogExecutionTime;
 import ru.stm.delete_rows.service.DatabaseService;
 import ru.stm.delete_rows.service.strategy.RemoveStrategy;
 
@@ -21,7 +22,7 @@ import static ru.stm.delete_rows.constants.Queries.SELECT_COUNT_OF_RECORDS_BY_DA
 @Service
 public class PartitionRemoveStrategy extends ARemoveStrategy implements RemoveStrategy {
 
-    private static final int RECOMMENDED_PERCENT = 50;
+    private static final double RECOMMENDED_PERCENT = 30;
     private static final Integer STEP_PERCENT = 10;
 
     public PartitionRemoveStrategy(DatabaseService databaseService) {
@@ -36,7 +37,9 @@ public class PartitionRemoveStrategy extends ARemoveStrategy implements RemoveSt
      */
     @Override
     @Transactional
+    @LogExecutionTime
     public void remove(String table, String date) {
+        log.info("Удаление методом партиций");
         Integer count = databaseService.queryForObject(
                 format(SELECT_COUNT_OF_RECORDS_BY_DATE, table, date),
                 Integer.class);
@@ -53,11 +56,11 @@ public class PartitionRemoveStrategy extends ARemoveStrategy implements RemoveSt
             databaseService.execute(sql);
             log.info("Таблица: {}. Удалено {}% из {} ", table, i * STEP_PERCENT, count);
         }
-        log.info("Закончили упражнение.");
+        log.info("Удаление завершено");
     }
 
     @Override
-    public boolean isRecommended(long percent) {
+    public boolean isRecommended(double percent) {
         return percent < RECOMMENDED_PERCENT;
     }
 }
