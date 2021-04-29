@@ -15,8 +15,7 @@ import java.util.Map;
 import java.util.stream.IntStream;
 
 import static java.lang.String.format;
-import static ru.stm.delete_rows.constants.Queries.CREATE_TABLE_BY_NAME;
-import static ru.stm.delete_rows.constants.Queries.DROP_TABLE_BY_NAME;
+import static ru.stm.delete_rows.constants.Queries.*;
 
 /**
  * Вспомогательный сервис генерации данных
@@ -103,6 +102,7 @@ public class DeleteUtilsService {
      */
     private void executeBatch(String table, List<Map<String, LocalDateTime>> records) {
         log.info("Запись {} строк в таблицу {}", records.size(), table);
+        databaseService.execute(String.format(SET_LAST_INDEX, table, table));
         SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(databaseService.getDataSource())
                 .withTableName(table)
                 .usingGeneratedKeyColumns(ID_COLUMN_NAME)

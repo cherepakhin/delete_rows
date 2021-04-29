@@ -11,8 +11,10 @@ public class Queries {
     public static final String SELECT_COUNT_OF_RECORD_BY_TABLE_NAME = "select count(*) from %s";
     public static final String TRUNCATE_TABLE_BY_NAME = "truncate %s";
     public static final String CREATE_TEMP_TABLE = "create table if not exists temp_%s (id SERIAL PRIMARY KEY, ddate timestamp )";
-    public static final String INSERT_ROW_BY_SELECT = "insert into temp_table (id,ddate) select * from %s where ddate >= '%s'";
-    public static final String RENAME_TEMP_TABLE = "alter table temp_table rename to %s";
+    public static final String INSERT_ROW_BY_SELECT = "insert into temp_%s (id,ddate) select * from %s where ddate >= '%s'";
+    public static final String RENAME_TEMP_TABLE = "alter table temp_%s rename to %s";
+    public static final String SET_LAST_INDEX = "SELECT SETVAL((SELECT PG_GET_SERIAL_SEQUENCE('%s', 'id')), (SELECT (MAX(id) + 1) FROM %s), FALSE);";
+
 
     private Queries() {
         throw new IllegalStateException("Utility query class");
