@@ -43,7 +43,7 @@ mvn clean spring-boot:run
 | EndPoint | HTTP-метод | Переменные запроса | Описание |
 | --- |------- | ------ |------ |
 | /new_table |POST | table,length |Создать таблицу с именем __table__ и сгенерировать __length__ записей |
-| /insert_row |POST | table,date,length |Добавить в таблицу __table__ количество записей __length__ за дату __date__|
+| /insert_rows |POST | table,date,length |Добавить в таблицу __table__ количество записей __length__ за дату __date__|
 | /drop_table |POST | table |Удалить таблицу с именем __table__ |
 | /delete |POST | table,fromDate |Удалить из таблицы с именем __table__ записи старее __fromDate__.|
 
